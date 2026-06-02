@@ -1,0 +1,9 @@
+{
+  "alwaysUpdateLinks": true,
+  "newFileLocation": "current",
+  "userIgnoreFilters": [
+    "_source/",
+    "_build/",
+    "docs/"
+  ]
+}

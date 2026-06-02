@@ -1,0 +1,7 @@
+# gyoogle 원본 클론 (재실행 시 _build/convert.py가 다시 받음)
+_source/
+
+# Obsidian 사용자별 작업 상태
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
