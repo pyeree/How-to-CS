@@ -100,3 +100,9 @@ aliases: ["CPU 스케줄링", "스케줄링"]
 - CPU 스케줄링 종류 및 정의 참고 : [링크](https://m.blog.naver.com/PostView.nhn?blogId=so_fragrant&logNo=80056608452&proxyReferer=https:%2F%2Fwww.google.com%2F)
 - 다단계큐 참고 : [링크](https://jhnyang.tistory.com/28)
 - 다단계 피드백 큐 참고 : [링크](https://jhnyang.tistory.com/156)
+
+<!-- 🔒 MANUAL:START — 빌드해도 안 지워짐. 30초 요약 등 직접 작성 -->
+## 🎤 면접 30초 요약
+> 본문을 30초 분량으로 압축. 막히면 [[🤖 Claude 학습 루프]]의 '채우기' 프롬프트 사용.
+
+<!-- 🔒 MANUAL:END -->

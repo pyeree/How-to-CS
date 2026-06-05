@@ -159,3 +159,9 @@ Java에는 옵저버 패턴을 적용한 것들을 기본적으로 제공해줌
 ##### [참고]
 
 [링크](<https://flowarc.tistory.com/entry/%EB%94%94%EC%9E%90%EC%9D%B8-%ED%8C%A8%ED%84%B4-%EC%98%B5%EC%A0%80%EB%B2%84-%ED%8C%A8%ED%84%B4Observer-Pattern>)
+
+<!-- 🔒 MANUAL:START — 빌드해도 안 지워짐. 30초 요약 등 직접 작성 -->
+## 🎤 면접 30초 요약
+> 본문을 30초 분량으로 압축. 막히면 [[🤖 Claude 학습 루프]]의 '채우기' 프롬프트 사용.
+
+<!-- 🔒 MANUAL:END -->

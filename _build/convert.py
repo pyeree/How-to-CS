@@ -117,6 +117,35 @@ def get_priority(title):
     if title in PRIORITY_3: return 3
     return 2
 
+# ---- 수동 영역(빌드해도 안 지워지는 블록) ----
+MANUAL_START = "<!-- 🔒 MANUAL:START — 빌드해도 안 지워짐. 30초 요약 등 직접 작성 -->"
+MANUAL_END   = "<!-- 🔒 MANUAL:END -->"
+MANUAL_RE = re.compile(re.escape(MANUAL_START) + r".*?" + re.escape(MANUAL_END), re.S)
+
+def extract_manual(text):
+    m = MANUAL_RE.search(text)
+    return m.group(0) if m else None
+
+def scaffold_manual():
+    return (MANUAL_START + "\n## 🎤 면접 30초 요약\n"
+            "> 본문을 30초 분량으로 압축. 막히면 [[🤖 Claude 학습 루프]]의 '채우기' 프롬프트 사용.\n\n"
+            + MANUAL_END)
+
+# 빌드 전: 기존 노트에서 MANUAL 블록을 스냅샷 (파일명 stem -> 블록)
+def snapshot_manual():
+    saved = {}
+    for _, dest, _ in FOLDER_MAP:
+        p = os.path.join(ROOT, dest)
+        if not os.path.isdir(p):
+            continue
+        for fn in os.listdir(p):
+            if not fn.endswith(".md"):
+                continue
+            blk = extract_manual(open(os.path.join(p, fn), encoding="utf-8").read())
+            if blk:
+                saved[fn[:-3]] = blk
+    return saved
+
 # ---- 1단계: 임포트할 파일 수집 + 제목 레지스트리 구축 ----
 def collect():
     files = []  # (src_path, dest_folder, tag, title)
@@ -207,6 +236,8 @@ def make_frontmatter(title, tag, aliases):
 
 def run():
     files, titles = collect()
+    # 재생성 전에 수동 영역(30초 요약 등) 스냅샷 -> rmtree 후 재주입
+    saved_manual = snapshot_manual()
     # dest 폴더 초기화
     for _, dest, _ in FOLDER_MAP:
         p = os.path.join(ROOT, dest)
@@ -226,6 +257,12 @@ def run():
         out = make_frontmatter(title, tag, aliases) + body
         # 안전한 파일명 (윈도우 금지문자 제거)
         safe = re.sub(r'[<>:"/\\|?*]', "", title)
+        # 수동 영역: 보존본 우선, 없으면 빈출(priority 1)에 빈 스캐폴드
+        manual = saved_manual.get(safe)
+        if manual is None and get_priority(title) == 1:
+            manual = scaffold_manual()
+        if manual:
+            out = out.rstrip() + "\n\n" + manual + "\n"
         with open(os.path.join(ROOT, dest, safe + ".md"), "w", encoding="utf-8") as f:
             f.write(out)
         stats[dest] = stats.get(dest, 0) + 1

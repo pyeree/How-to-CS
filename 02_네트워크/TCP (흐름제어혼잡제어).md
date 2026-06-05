@@ -128,3 +128,8 @@ priority: 1
 - <https://www.brianstorti.com/tcp-flow-control/>
 - <https://www.brianstorti.com/tcp-flow-control/>
 
+<!-- 🔒 MANUAL:START — 빌드해도 안 지워짐. 30초 요약 등 직접 작성 -->
+## 🎤 면접 30초 요약
+> 본문을 30초 분량으로 압축. 막히면 [[🤖 Claude 학습 루프]]의 '채우기' 프롬프트 사용.
+
+<!-- 🔒 MANUAL:END -->

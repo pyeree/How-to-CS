@@ -61,3 +61,9 @@ TCP는 정확한 전송을 보장해야 한다. 따라서 통신하기에 앞서
 ##### [참고 자료]
 
 [링크](<https://www.geeksforgeeks.org/tcp-connection-termination/>)
+
+<!-- 🔒 MANUAL:START — 빌드해도 안 지워짐. 30초 요약 등 직접 작성 -->
+## 🎤 면접 30초 요약
+> 본문을 30초 분량으로 압축. 막히면 [[🤖 Claude 학습 루프]]의 '채우기' 프롬프트 사용.
+
+<!-- 🔒 MANUAL:END -->
