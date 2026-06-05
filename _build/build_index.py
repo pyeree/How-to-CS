@@ -15,7 +15,9 @@ CATS = [
     ("05_알고리즘", "알고리즘"), ("06_디자인패턴", "디자인패턴"),
     ("07_컴퓨터구조", "컴퓨터구조"), ("08_소프트웨어공학", "소프트웨어공학"),
 ]
-FROM = " OR ".join(f'"{d}"' for d, _ in CATS)
+# 대시보드/로드맵 집계 범위 = 8개 카테고리 + _inbox(손수 추가한 내 노트).
+# CATS(=MOC/Home 생성 대상)에는 _inbox를 넣지 않아 convert.py의 rmtree 대상에서 제외된다.
+FROM = " OR ".join(f'"{d}"' for d, _ in CATS) + ' OR "_inbox"'
 
 def parse_fm(text):
     fm = {}
@@ -76,8 +78,9 @@ def build_home():
               "2. 설정 → 커뮤니티 플러그인 → **Dataview** 설치 후 활성화 (대시보드 자동집계에 필요)",
               "3. 그래프 뷰(좌측 ●)를 열면 8개 클러스터가 보임", "",
               "## ✍️ 새 개념 추가법",
-              "`_templates/개념노트.md`를 복사해서 해당 카테고리 폴더에 넣고, "
-              "본문에 다른 개념을 `[[ ]]`로 연결하면 그래프에 자동 편입된다."]
+              "`_templates/개념노트.md`를 복사해 [[＋ 내 노트|_inbox]] 폴더에 저장하고, "
+              "본문에서 `[[ ]]`로 연결하면 그래프에 자동 편입된다. "
+              "(카테고리 01~08 폴더는 빌드가 재생성하므로 직접 만든 노트는 [[＋ 내 노트|_inbox]]에 둘 것.)"]
     with open(os.path.join(idx, "🏠 Home.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
 
@@ -256,6 +259,28 @@ def build_loop_guide():
     with open(os.path.join(idx, "🤖 Claude 학습 루프.md"), "w", encoding="utf-8") as f:
         f.write(c)
 
+# ---- _inbox (손수 만든 내 노트 — 빌드가 절대 안 지우는 안전지대) ----
+def build_inbox():
+    d = os.path.join(ROOT, "_inbox")
+    os.makedirs(d, exist_ok=True)
+    # 안내 노트만 재생성(＋ 접두=생성물). 그 외 사용자 노트는 건드리지 않는다.
+    guide = '''# 🗃 내 노트 (_inbox)
+
+> **여기는 빌드가 절대 지우지 않는 안전지대다.** `convert.py`는 8개 카테고리 폴더만
+> 재생성하므로, gyoogle 원본에 없는 *내가 직접 만든* 개념·정리·면접 회고는 여기에 둔다.
+
+## 쓰는 법
+1. `_templates/개념노트.md`를 복사해 이 폴더에 새 노트로 저장.
+2. `tags`·`priority`·`status`를 채우면 [[📊 진도 대시보드]]·[[🗺️ 학습 로드맵]]에 함께 집계된다.
+3. 본문에서 `[[개념이름]]`으로 기존 노트와 연결하면 그래프에 편입된다.
+
+> 카테고리 폴더(01~08)에 직접 노트를 만들면 다음 빌드 때 사라진다. 내 노트는 반드시 여기에.
+
+← [[🏠 Home]]
+'''
+    with open(os.path.join(d, "＋ 내 노트.md"), "w", encoding="utf-8") as f:
+        f.write(guide)
+
 # ---- .obsidian 설정 (없을 때만 생성 — 사용자가 추가한 플러그인/설정 보존) ----
 def build_obsidian():
     d = os.path.join(ROOT, ".obsidian")
@@ -272,8 +297,8 @@ def build_obsidian():
 
 def run():
     build_mocs(); build_home(); build_dashboard(); build_roadmap()
-    build_template(); build_loop_guide(); build_obsidian()
-    print("INDEX 레이어 생성 완료: MOC 8개 + Home/대시보드/로드맵 + 템플릿 + 학습루프 + .obsidian")
+    build_template(); build_loop_guide(); build_inbox(); build_obsidian()
+    print("INDEX 레이어 생성 완료: MOC 8개 + Home/대시보드/로드맵 + 템플릿 + 학습루프 + _inbox + .obsidian")
 
 if __name__ == "__main__":
     run()
