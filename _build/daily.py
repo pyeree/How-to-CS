@@ -63,3 +63,33 @@ def body_first(text):
             continue
         return p
     return ""
+
+
+def _seed(today):
+    return int(hashlib.sha1(today.isoformat().encode("utf-8")).hexdigest(), 16)
+
+
+def _pick_one(cands, today):
+    """폴더+파일명 정렬로 결정성 확보 후 날짜시드로 택1."""
+    cands = sorted(cands, key=lambda n: (n["folder"], n["filename"]))
+    return cands[_seed(today) % len(cands)]
+
+
+def pick_today(notes, today):
+    """복습우선 선정. 반환 (note|None, reason|None)."""
+    iso = today.isoformat()
+    due = [n for n in notes if n["review_date"] and n["review_date"] <= iso]
+    if due:
+        earliest = min(n["review_date"] for n in due)
+        tied = [n for n in due if n["review_date"] == earliest]
+        return _pick_one(tied, today), "복습"
+    g2 = [n for n in notes if n["priority"] == 1 and n["status"] == "안함"]
+    if g2:
+        return _pick_one(g2, today), "빈출신규"
+    g3 = [n for n in notes if n["status"] == "안함"]
+    if g3:
+        return _pick_one(g3, today), "신규"
+    g4 = [n for n in notes if n["status"] == "완료"]
+    if g4:
+        return _pick_one(g4, today), "장기복습"
+    return None, None
