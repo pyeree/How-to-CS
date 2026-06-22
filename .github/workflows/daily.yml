@@ -1,0 +1,32 @@
+name: 오늘의 개념 데일리
+
+on:
+  schedule:
+    - cron: "0 23 * * *"   # 08:00 KST (UTC+9)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: 오늘의 개념 선정 + 텔레그램 발송
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python _build/daily.py
+
+      - name: 변경분 커밋
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "00_INDEX/🗓 오늘의 개념.md"
+          git diff --staged --quiet || git commit -m "데일리: 오늘의 개념 갱신 ($(date +%F))"
+          git push
