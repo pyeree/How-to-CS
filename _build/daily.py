@@ -54,15 +54,28 @@ def extract_related(text):
     return m.group(1).strip() if m else ""
 
 
-def body_first(text):
-    """frontmatter 제거 후 첫 '진짜' 문단(헤딩/인용/코드/주석/구분선 제외)."""
+def body_first(text, limit=300):
+    """frontmatter 제거 후 본문 첫 블록을 limit자까지 모아 반환.
+    제목(##) 다음의 실제 문단들을 모으되, 다음 상위 섹션(## …)이나
+    MANUAL 블록을 만나면 멈춘다. 헤딩/인용/코드/구분선/HTML 줄은 제외."""
     body = re.sub(r"^---\n.*?\n---\n", "", text, flags=re.S)
+    chunks, total = [], 0
     for para in re.split(r"\n\s*\n", body):
         p = para.strip()
-        if not p or p[0] in "#>" or p.startswith(("<!--", "---", "```")):
+        if not p:
             continue
-        return p
-    return ""
+        if chunks and (re.match(r"##\s", p) or p.startswith("<!--")):
+            break  # 본문 다 모은 뒤 다음 상위 섹션/MANUAL 만나면 종료
+        if p[0] in "#><" or p.startswith(("---", "```")):
+            continue  # 헤딩/서브헤딩/인용/코드/구분선/HTML 줄 제외
+        chunks.append(p)
+        total += len(p)
+        if total >= limit:
+            break
+    out = "\n\n".join(chunks).strip()
+    if len(out) > limit:
+        out = out[:limit].rstrip() + "…"
+    return out
 
 
 def _seed(today):

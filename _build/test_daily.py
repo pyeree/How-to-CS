@@ -275,5 +275,44 @@ class TestRenderNoteEmptySummaryAndBody(unittest.TestCase):
         self.assertIn("채우기", after_header)
 
 
+NOTE_LONG_BODY = """---
+tags: [네트워크]
+status: 안함
+priority: 1
+---
+## TCP 흐름제어
+
+첫 문단 설명입니다.
+
+#### 세부 항목
+
+둘째 문단 설명입니다.
+
+## 관련 개념
+- [[혼잡 제어]]
+
+<!-- 🔒 MANUAL:START -->
+## 🎤 면접 30초 요약
+<!-- 🔒 MANUAL:END -->
+"""
+
+
+class TestBodyExcerpt(unittest.TestCase):
+    def test_collects_multiple_paragraphs_until_next_section(self):
+        out = daily.body_first(NOTE_LONG_BODY)
+        self.assertIn("첫 문단 설명입니다.", out)
+        self.assertIn("둘째 문단 설명입니다.", out)   # #### 서브헤딩 건너뛰고 계속 수집
+        self.assertNotIn("혼잡 제어", out)            # ## 관련 개념에서 멈춤
+
+    def test_respects_char_limit_with_ellipsis(self):
+        long_text = "---\ntags: [x]\n---\n## 제목\n\n" + ("가" * 500)
+        out = daily.body_first(long_text, limit=100)
+        self.assertLessEqual(len(out), 101)            # 100자 + 말줄임표(…)
+        self.assertTrue(out.endswith("…"))
+
+    def test_empty_when_no_body(self):
+        self.assertEqual(daily.body_first("---\ntags: [x]\n---\n## 제목만\n"), "")
+
+
 if __name__ == "__main__":
     unittest.main()
