@@ -76,7 +76,7 @@ How-to-CS/
 
 ## 🗓 오늘의 개념 (데일리)
 
-매일 08:00(KST) GitHub Actions가 `_build/daily.py`를 돌려 92개 노트 중 하나를
+매일 08:00(KST) GitHub Actions가 `_build/daily.py`를 돌려 전체 노트 중 하나를
 **복습우선 + 날짜시드**로 골라 `00_INDEX/🗓 오늘의 개념.md`로 갱신하고 텔레그램으로 푸시한다.
 
 - 선정 순서: 복습 도래 → 빈출(priority 1) 미학습 → 미학습 → 완료(장기복습)

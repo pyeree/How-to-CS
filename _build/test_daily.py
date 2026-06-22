@@ -237,5 +237,43 @@ class TestPickOrphanStatus(unittest.TestCase):
         self.assertIsNone(reason)
 
 
+class TestPickBokseupFallback(unittest.TestCase):
+    """M2 test: status='복습' + review_date=None -> g4 fallback, reason='장기복습'"""
+    TODAY = date(2026, 6, 22)
+
+    def test_bokseup_no_review_date_falls_into_janggi(self):
+        notes = [_note("A", status="복습", review=None)]
+        picked, reason = daily.pick_today(notes, self.TODAY)
+        self.assertIsNotNone(picked)
+        self.assertEqual(picked["title"], "A")
+        self.assertEqual(reason, "장기복습")
+
+
+class TestBuildMessageJanggiFlag(unittest.TestCase):
+    """M4 test: build_message with reason='장기복습' shows 🔁"""
+    TODAY = date(2026, 6, 22)
+
+    def test_janggi_shows_repeat_flag(self):
+        note = _note("완료노트", priority=2, status="완료")
+        note["summary"] = "요약 있음."
+        msg = daily.build_message(note, "장기복습", self.TODAY.isoformat(), "http://x")
+        self.assertIn("🔁", msg)
+
+
+class TestRenderNoteEmptySummaryAndBody(unittest.TestCase):
+    """M5 test: render_note with summary='' and body_first='' -> no leading blank before hint"""
+    def test_no_blank_line_before_hint_when_both_empty(self):
+        note = _note("빈노트", status="안함")
+        note["summary"] = ""
+        note["body_first"] = ""
+        md = daily.render_note(note, "신규", "2026-06-22", "http://x")
+        # Find the section after the 30초 요약 header and verify no "\n\n>" immediately follows
+        header = "### 🎤 30초 요약\n"
+        idx = md.index(header)
+        after_header = md[idx + len(header):]
+        self.assertFalse(after_header.startswith("\n\n>"), "빈 줄 없이 힌트가 바로 와야 한다")
+        self.assertIn("채우기", after_header)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -89,7 +89,7 @@ def pick_today(notes, today):
     g3 = [n for n in notes if n["status"] == "안함"]
     if g3:
         return _pick_one(g3, today), "신규"
-    g4 = [n for n in notes if n["status"] == "완료"]
+    g4 = [n for n in notes if n["status"] in ("완료", "복습")]
     if g4:
         return _pick_one(g4, today), "장기복습"
     return None, None
@@ -103,7 +103,7 @@ def github_url(folder, filename, repo, branch="main"):
 def build_message(note, reason, today_iso, url):
     """텔레그램 MarkdownV2 액티브 리콜 카드."""
     e = md_v2_escape
-    flags = ("⭐" if note["priority"] == 1 else "") + ("🔁" if reason == "복습" else "")
+    flags = ("⭐" if note["priority"] == 1 else "") + ("🔁" if reason in ("복습", "장기복습") else "")
     summary = note["summary"] or note["body_first"]
     summary = summary[:600]
     lines = [
@@ -123,12 +123,14 @@ def build_message(note, reason, today_iso, url):
 
 def render_note(note, reason, today_iso, url):
     """00_INDEX/🗓 오늘의 개념.md 본문(옵시디언 마크다운)."""
-    flags = ("⭐" if note["priority"] == 1 else "") + ("🔁" if reason == "복습" else "")
+    flags = ("⭐" if note["priority"] == 1 else "") + ("🔁" if reason in ("복습", "장기복습") else "")
     if note["summary"]:
         summary = note["summary"]
-    else:
+    elif note["body_first"]:
         summary = (note["body_first"] +
                    "\n\n> ⓘ 아직 30초 요약 없음 — 노트에서 [[🤖 Claude 학습 루프]] ① 채우기")
+    else:
+        summary = "> ⓘ 아직 30초 요약 없음 — 노트에서 [[🤖 Claude 학습 루프]] ① 채우기"
     related = note["related"] or "- (관련 개념 없음)"
     return (
         f"# 🗓 오늘의 개념 ({today_iso})\n"
