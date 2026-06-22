@@ -23,3 +23,43 @@ _MD_V2 = re.compile(r"([_*\[\]()~`>#+\-=|{}.!\\])")
 def md_v2_escape(s):
     """텔레그램 MarkdownV2 특수문자 이스케이프."""
     return _MD_V2.sub(r"\\\1", s or "")
+
+
+def parse_fm(text):
+    """frontmatter를 dict로. (build_index.py와 동일 방식, \\w가 한글 키도 매칭)"""
+    fm = {}
+    m = re.match(r"^---\n(.*?)\n---", text, re.S)
+    if m:
+        for line in m.group(1).splitlines():
+            mm = re.match(r"(\w+):\s*(.*)", line)
+            if mm:
+                fm[mm.group(1)] = mm.group(2).strip()
+    return fm
+
+
+def extract_summary(text):
+    """🔒 MANUAL 블록의 30초 요약 본문만. 헤딩/안내 인용문 제거. 없으면 ''."""
+    m = re.search(r"MANUAL:START.*?-->(.*?)<!--\s*🔒\s*MANUAL:END", text, re.S)
+    if not m:
+        return ""
+    block = m.group(1)
+    block = re.sub(r"(?m)^#+ .*$", "", block)   # 헤딩 제거
+    block = re.sub(r"(?m)^>.*$", "", block)      # 인용 안내문 제거
+    return block.strip()
+
+
+def extract_related(text):
+    """'## 관련 개념' 섹션 본문(다음 헤딩/MANUAL 전까지). 없으면 ''."""
+    m = re.search(r"(?m)^#+ 관련 개념\s*\n(.*?)(?=\n#+ |\n<!--|\Z)", text, re.S)
+    return m.group(1).strip() if m else ""
+
+
+def body_first(text):
+    """frontmatter 제거 후 첫 '진짜' 문단(헤딩/인용/코드/주석/구분선 제외)."""
+    body = re.sub(r"^---\n.*?\n---\n", "", text, flags=re.S)
+    for para in re.split(r"\n\s*\n", body):
+        p = para.strip()
+        if not p or p[0] in "#>" or p.startswith(("<!--", "---", "```")):
+            continue
+        return p
+    return ""
