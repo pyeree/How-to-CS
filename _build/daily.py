@@ -119,3 +119,26 @@ def build_message(note, reason, today_iso, url):
         lines += ["", e("아직 30초 요약 없음 → 학습루프 1번 채우기 프롬프트로 작성")]
     lines += ["", f"[{e('노트 열기 (GitHub)')}]({url})"]
     return "\n".join(lines)
+
+
+def render_note(note, reason, today_iso, url):
+    """00_INDEX/🗓 오늘의 개념.md 본문(옵시디언 마크다운)."""
+    flags = ("⭐" if note["priority"] == 1 else "") + ("🔁" if reason == "복습" else "")
+    if note["summary"]:
+        summary = note["summary"]
+    else:
+        summary = (note["body_first"] +
+                   "\n\n> ⓘ 아직 30초 요약 없음 — 노트에서 [[🤖 Claude 학습 루프]] ① 채우기")
+    related = note["related"] or "- (관련 개념 없음)"
+    return (
+        f"# 🗓 오늘의 개념 ({today_iso})\n"
+        f"> 매일 daily.py가 갱신하는 생성물. 직접 고치지 마세요.\n\n"
+        f"## {note['title']}  · {note['category']} {flags}\n"
+        f"[[{note['title']}]] 열기 · [GitHub]({url})\n\n"
+        f"👉 먼저 30초로 떠올려보고, 아래 요약과 맞춰보세요.\n\n"
+        f"### 🎤 30초 요약\n{summary}\n\n"
+        f"### 🔗 관련 개념\n{related}\n\n"
+        f"### 🤖 더 훈련하기\n"
+        f"[[🤖 Claude 학습 루프]] ② 출제 / ③ 꼬리질문 프롬프트를 돌려보세요.\n\n"
+        f"← [[🏠 Home]]\n"
+    )

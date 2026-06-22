@@ -103,6 +103,28 @@ class TestMessage(unittest.TestCase):
         self.assertIn("채우기", msg)     # 작성 유도 문구
 
 
+class TestRender(unittest.TestCase):
+    def test_render_note_contains_key_parts(self):
+        note = _note("뮤텍스 vs 세마포어", priority=1, status="완료", review="2026-06-10")
+        note["summary"] = "뮤텍스는 1개."
+        note["related"] = "- [[Deadlock]]"
+        md = daily.render_note(note, "복습", "2026-06-22", "http://x")
+        self.assertIn("# 🗓 오늘의 개념 (2026-06-22)", md)
+        self.assertIn("[[뮤텍스 vs 세마포어]]", md)
+        self.assertIn("뮤텍스는 1개.", md)
+        self.assertIn("[[Deadlock]]", md)
+        self.assertIn("[[🤖 Claude 학습 루프]]", md)
+        self.assertIn("← [[🏠 Home]]", md)
+
+    def test_render_note_empty_summary_hint(self):
+        note = _note("TCP", status="안함")
+        note["summary"] = ""
+        note["body_first"] = "핸드셰이크 설명"
+        md = daily.render_note(note, "신규", "2026-06-22", "http://x")
+        self.assertIn("핸드셰이크 설명", md)
+        self.assertIn("채우기", md)
+
+
 NOTE_WITH_SUMMARY = """---
 tags: [운영체제]
 status: 완료
