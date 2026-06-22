@@ -142,3 +142,85 @@ def render_note(note, reason, today_iso, url):
         f"[[🤖 Claude 학습 루프]] ② 출제 / ③ 꼬리질문 프롬프트를 돌려보세요.\n\n"
         f"← [[🏠 Home]]\n"
     )
+
+
+def load_notes(root):
+    """8개 카테고리 + _inbox의 개념 노트(＋ 접두/비.md 제외)를 dict 리스트로."""
+    notes = []
+    folders = list(CATS) + [("_inbox", "내 노트")]
+    for folder, category in folders:
+        d = os.path.join(root, folder)
+        if not os.path.isdir(d):
+            continue
+        for fn in sorted(os.listdir(d)):
+            if not fn.endswith(".md") or fn.startswith("＋"):
+                continue
+            text = open(os.path.join(d, fn), encoding="utf-8").read()
+            fm = parse_fm(text)
+            notes.append({
+                "title": fn[:-3],
+                "filename": fn,
+                "folder": folder,
+                "category": category,
+                "priority": int((fm.get("priority") or "2").strip() or "2"),
+                "status": (fm.get("status") or "").strip(),
+                "review_date": (fm.get("복습일") or "").strip() or None,
+                "summary": extract_summary(text),
+                "related": extract_related(text),
+                "body_first": body_first(text),
+            })
+    return notes
+
+
+def send_telegram(token, chat_id, text):
+    """best-effort 발송. 성공 True / 실패 False(예외 삼킴)."""
+    api = f"https://api.telegram.org/bot{token}/sendMessage"
+    data = urllib.parse.urlencode({
+        "chat_id": chat_id, "text": text,
+        "parse_mode": "MarkdownV2", "disable_web_page_preview": "true",
+    }).encode("utf-8")
+    try:
+        with urllib.request.urlopen(urllib.request.Request(api, data=data), timeout=15) as r:
+            return r.status == 200
+    except Exception as ex:
+        print("telegram error:", ex)
+        return False
+
+
+def main(argv):
+    sys.stdout.reconfigure(encoding="utf-8")  # cp949 콘솔에서 미리보기 이모지 크래시 차단
+    dry = "--dry-run" in argv
+    dpart = [a for a in argv if a.startswith("--date=")]
+    today = date.fromisoformat(dpart[0].split("=", 1)[1]) if dpart else date.today()
+    repo = os.environ.get("GITHUB_REPOSITORY", REPO_DEFAULT)
+
+    notes = load_notes(ROOT)
+    note, reason = pick_today(notes, today)
+    if note is None:
+        print("no candidate today")
+        return
+
+    url = github_url(note["folder"], note["filename"], repo)
+    message = build_message(note, reason, today.isoformat(), url)
+    note_md = render_note(note, reason, today.isoformat(), url)
+
+    if dry:
+        print("PICK:", note["folder"], "/", note["filename"], "/ reason:", reason)
+        print("----- TELEGRAM PREVIEW -----")
+        print(message)
+        return
+
+    out = os.path.join(ROOT, "00_INDEX", "🗓 오늘의 개념.md")
+    with open(out, "w", encoding="utf-8") as f:
+        f.write(note_md)
+    print("wrote:", out)
+
+    token, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
+    if token and chat:
+        print("telegram sent" if send_telegram(token, chat, message) else "telegram failed (non-fatal)")
+    else:
+        print("telegram secrets missing - skip send")
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
