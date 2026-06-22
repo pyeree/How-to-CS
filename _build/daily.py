@@ -39,7 +39,7 @@ def parse_fm(text):
 
 def extract_summary(text):
     """🔒 MANUAL 블록의 30초 요약 본문만. 헤딩/안내 인용문 제거. 없으면 ''."""
-    m = re.search(r"MANUAL:START.*?-->(.*?)<!--\s*🔒\s*MANUAL:END", text, re.S)
+    m = re.search(r"MANUAL:START.*?-->(.*?)<!--.*?MANUAL:END", text, re.S)
     if not m:
         return ""
     block = m.group(1)
@@ -78,7 +78,7 @@ def _pick_one(cands, today):
 def pick_today(notes, today):
     """복습우선 선정. 반환 (note|None, reason|None)."""
     iso = today.isoformat()
-    due = [n for n in notes if n["review_date"] and n["review_date"] <= iso]
+    due = [n for n in notes if n["review_date"] and n["review_date"] <= iso and n["status"] != "안함"]
     if due:
         earliest = min(n["review_date"] for n in due)
         tied = [n for n in due if n["review_date"] == earliest]
@@ -112,9 +112,9 @@ def build_message(note, reason, today_iso, url):
         f"*{e(note['title'])}*",
         "",
         e("30초 안에 설명해보세요  막히면 아래 펼치기"),
-        "",
-        f"||{e(summary)}||",
     ]
+    if summary:
+        lines += ["", f"||{e(summary)}||"]
     if not note["summary"]:
         lines += ["", e("아직 30초 요약 없음 → 학습루프 1번 채우기 프롬프트로 작성")]
     lines += ["", f"[{e('노트 열기 (GitHub)')}]({url})"]
@@ -155,14 +155,22 @@ def load_notes(root):
         for fn in sorted(os.listdir(d)):
             if not fn.endswith(".md") or fn.startswith("＋"):
                 continue
-            text = open(os.path.join(d, fn), encoding="utf-8").read()
+            try:
+                text = open(os.path.join(d, fn), encoding="utf-8").read()
+            except OSError:
+                continue
             fm = parse_fm(text)
+            raw_priority = (fm.get("priority") or "2").strip() or "2"
+            try:
+                priority = int(raw_priority)
+            except ValueError:
+                priority = 2
             notes.append({
                 "title": fn[:-3],
                 "filename": fn,
                 "folder": folder,
                 "category": category,
-                "priority": int((fm.get("priority") or "2").strip() or "2"),
+                "priority": priority,
                 "status": (fm.get("status") or "").strip(),
                 "review_date": (fm.get("복습일") or "").strip() or None,
                 "summary": extract_summary(text),
@@ -202,7 +210,6 @@ def main(argv):
 
     url = github_url(note["folder"], note["filename"], repo)
     message = build_message(note, reason, today.isoformat(), url)
-    note_md = render_note(note, reason, today.isoformat(), url)
 
     if dry:
         print("PICK:", note["folder"], "/", note["filename"], "/ reason:", reason)
@@ -210,6 +217,7 @@ def main(argv):
         print(message)
         return
 
+    note_md = render_note(note, reason, today.isoformat(), url)
     out = os.path.join(ROOT, "00_INDEX", "🗓 오늘의 개념.md")
     with open(out, "w", encoding="utf-8") as f:
         f.write(note_md)

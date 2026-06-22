@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os, sys, unittest
+from datetime import date
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import daily
 
@@ -11,9 +12,6 @@ class TestEscape(unittest.TestCase):
 
     def test_leaves_korean_and_emoji_untouched(self):
         self.assertEqual(daily.md_v2_escape("뮤텍스 세마포어"), "뮤텍스 세마포어")
-
-
-from datetime import date
 
 
 def _note(title, folder="01_운영체제", priority=2, status="안함", review=None):
@@ -196,6 +194,47 @@ class TestExtract(unittest.TestCase):
 
     def test_body_first(self):
         self.assertEqual(daily.body_first(NOTE_EMPTY_SUMMARY), "핸드셰이크 본문 첫 문단.")
+
+
+class TestBuildMessageEmptySpoiler(unittest.TestCase):
+    """Test A: Fix 1 / C2 — 빈 스포일러 억제"""
+    TODAY = date(2026, 6, 22)
+
+    def test_no_spoiler_when_summary_and_body_first_both_empty(self):
+        note = _note("빈노트", priority=2, status="안함")
+        note["summary"] = ""
+        note["body_first"] = ""
+        msg = daily.build_message(note, "신규", self.TODAY.isoformat(), "http://x")
+        self.assertNotIn("||", msg)
+        self.assertIn("채우기", msg)
+
+
+class TestPickExcludesAntham(unittest.TestCase):
+    """Test B: Fix 5 / I3 — 복습 버킷에서 안함 상태 제외"""
+    TODAY = date(2026, 6, 22)
+
+    def test_antham_with_review_date_not_treated_as_review(self):
+        notes = [
+            _note("복습안함", status="안함", review="2026-06-10"),  # 안함 + 복습일 → 버킷 제외
+            _note("신규빈출", priority=1, status="안함"),
+        ]
+        picked, reason = daily.pick_today(notes, self.TODAY)
+        self.assertEqual(reason, "빈출신규")
+        self.assertEqual(picked["title"], "신규빈출")
+
+
+class TestPickOrphanStatus(unittest.TestCase):
+    """Test C: I5 — 진행중 상태만 있을 때 (None, None) 반환"""
+    TODAY = date(2026, 6, 22)
+
+    def test_only_jinhengjoong_returns_none(self):
+        notes = [
+            _note("A", status="진행중"),
+            _note("B", status="진행중"),
+        ]
+        picked, reason = daily.pick_today(notes, self.TODAY)
+        self.assertIsNone(picked)
+        self.assertIsNone(reason)
 
 
 if __name__ == "__main__":
