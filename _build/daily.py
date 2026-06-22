@@ -93,3 +93,29 @@ def pick_today(notes, today):
     if g4:
         return _pick_one(g4, today), "장기복습"
     return None, None
+
+
+def github_url(folder, filename, repo, branch="main"):
+    path = urllib.parse.quote(f"{folder}/{filename}")
+    return f"https://github.com/{repo}/blob/{branch}/{path}"
+
+
+def build_message(note, reason, today_iso, url):
+    """텔레그램 MarkdownV2 액티브 리콜 카드."""
+    e = md_v2_escape
+    flags = ("⭐" if note["priority"] == 1 else "") + ("🔁" if reason == "복습" else "")
+    summary = note["summary"] or note["body_first"]
+    summary = summary[:600]
+    lines = [
+        f"🗓 오늘의 개념 · {e(note['category'])}  {flags}".rstrip(),
+        "",
+        f"*{e(note['title'])}*",
+        "",
+        e("30초 안에 설명해보세요  막히면 아래 펼치기"),
+        "",
+        f"||{e(summary)}||",
+    ]
+    if not note["summary"]:
+        lines += ["", e("아직 30초 요약 없음 → 학습루프 1번 채우기 프롬프트로 작성")]
+    lines += ["", f"[{e('노트 열기 (GitHub)')}]({url})"]
+    return "\n".join(lines)

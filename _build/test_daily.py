@@ -74,6 +74,35 @@ class TestPick(unittest.TestCase):
         self.assertEqual(picked["title"], "A")
 
 
+class TestMessage(unittest.TestCase):
+    TODAY = date(2026, 6, 22)
+
+    def test_github_url_encodes_path(self):
+        u = daily.github_url("01_운영체제", "뮤텍스 vs 세마포어.md", "pyeree/How-to-CS")
+        self.assertTrue(u.startswith("https://github.com/pyeree/How-to-CS/blob/main/"))
+        self.assertNotIn(" ", u)  # 공백 인코딩됨
+
+    def test_build_message_has_title_spoiler_link(self):
+        note = _note("뮤텍스 vs 세마포어", priority=1, status="완료", review="2026-06-10")
+        note["summary"] = "뮤텍스는 1개를 동기화."
+        url = "https://github.com/pyeree/How-to-CS/blob/main/x"
+        msg = daily.build_message(note, "복습", self.TODAY.isoformat(), url)
+        self.assertIn("오늘의 개념", msg)
+        self.assertIn("뮤텍스 vs 세마포어", msg.replace("\\", ""))  # 제목(이스케이프 무시)
+        self.assertIn("||", msg)        # 스포일러로 요약 가림
+        self.assertIn("⭐", msg)         # 빈출
+        self.assertIn("🔁", msg)         # 복습
+        self.assertIn(url, msg)         # 링크
+
+    def test_build_message_empty_summary_hint(self):
+        note = _note("TCP", priority=2, status="안함")
+        note["summary"] = ""
+        note["body_first"] = "핸드셰이크 설명"
+        msg = daily.build_message(note, "신규", self.TODAY.isoformat(), "http://x")
+        self.assertIn("핸드셰이크 설명", msg.replace("\\", ""))
+        self.assertIn("채우기", msg)     # 작성 유도 문구
+
+
 NOTE_WITH_SUMMARY = """---
 tags: [운영체제]
 status: 완료
