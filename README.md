@@ -74,6 +74,18 @@ How-to-CS/
 - **대시보드·로드맵·템플릿 문구를 바꾸려면** 산출물 `.md`가 아니라 `_build/build_index.py`를 고친다 (안 그러면 다음 빌드에 덮어쓰임).
 - `.obsidian` 설정은 **없을 때만** 생성한다 — 직접 설치한 플러그인은 보존된다.
 
+## 🗓 오늘의 개념 (데일리)
+
+매일 08:00(KST) GitHub Actions가 `_build/daily.py`를 돌려 92개 노트 중 하나를
+**복습우선 + 날짜시드**로 골라 `00_INDEX/🗓 오늘의 개념.md`로 갱신하고 텔레그램으로 푸시한다.
+
+- 선정 순서: 복습 도래 → 빈출(priority 1) 미학습 → 미학습 → 완료(장기복습)
+- 셋업: 텔레그램 `@BotFather` 봇 토큰 + chat_id 를 repo Secrets(`TELEGRAM_BOT_TOKEN`,
+  `TELEGRAM_CHAT_ID`)에 등록. 미등록 시 노트만 갱신하고 발송은 건너뛴다.
+- 수동 실행/미리보기: `python _build/daily.py --dry-run`
+
+---
+
 ## ⚠️ 하지 말 것 (footgun)
 
 - ❌ `_source/`를 손으로 고치지 마라. 빌드가 재생성한다.
