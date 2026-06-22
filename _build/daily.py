@@ -5,7 +5,7 @@ How-to-CS : 오늘의 개념 데일리
 - 00_INDEX/🗓 오늘의 개념.md 렌더 + 텔레그램 발송(best-effort)
 의존성: 표준 라이브러리만.
 """
-import os, re, sys, hashlib, urllib.request, urllib.parse
+import os, re, sys, hashlib, urllib.request, urllib.parse, urllib.error
 from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -182,16 +182,28 @@ def load_notes(root):
     return notes
 
 
-def send_telegram(token, chat_id, text):
-    """best-effort 발송. 성공 True / 실패 False(예외 삼킴)."""
+def send_telegram(token, chat_id, text, markdown=True):
+    """best-effort 발송. 성공 True / 실패 False(예외 삼킴).
+    MarkdownV2 파싱 400이면 평문(parse_mode 없이)으로 1회 재시도."""
     api = f"https://api.telegram.org/bot{token}/sendMessage"
-    data = urllib.parse.urlencode({
-        "chat_id": chat_id, "text": text,
-        "parse_mode": "MarkdownV2", "disable_web_page_preview": "true",
-    }).encode("utf-8")
+    payload = {"chat_id": chat_id, "text": text, "disable_web_page_preview": "true"}
+    if markdown:
+        payload["parse_mode"] = "MarkdownV2"
+    data = urllib.parse.urlencode(payload).encode("utf-8")
     try:
         with urllib.request.urlopen(urllib.request.Request(api, data=data), timeout=15) as r:
             return r.status == 200
+    except urllib.error.HTTPError as ex:
+        body = ""
+        try:
+            body = ex.read().decode("utf-8", "replace")
+        except Exception:
+            pass
+        print("telegram HTTPError", ex.code, body)
+        if markdown and "parse" in body.lower():
+            print("retrying as plain text")
+            return send_telegram(token, chat_id, text, markdown=False)
+        return False
     except Exception as ex:
         print("telegram error:", ex)
         return False
