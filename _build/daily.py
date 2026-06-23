@@ -6,7 +6,7 @@ How-to-CS : 오늘의 개념 데일리
 의존성: 표준 라이브러리만.
 """
 import os, re, sys, hashlib, urllib.request, urllib.parse, urllib.error
-from datetime import date
+from datetime import date, timedelta
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CATS = [
@@ -222,6 +222,43 @@ def send_telegram(token, chat_id, text, markdown=True):
         return False
 
 
+def next_review(status, today):
+    """뽑힌 노트의 자동 복습 진행 → (새 status, 새 복습일 iso).
+    안함/공부중→완료(+3일), 완료→완료(+7일), 복습→완료(+1일)."""
+    days = 1 if status == "복습" else 7 if status == "완료" else 3
+    return "완료", (today + timedelta(days=days)).isoformat()
+
+
+def set_frontmatter_fields(text, status, review):
+    """frontmatter의 status/복습일 줄을 교체한 새 텍스트 반환(frontmatter 없으면 원본)."""
+    m = re.match(r"^---\n(.*?)\n---", text, re.S)
+    if not m:
+        return text
+    block = m.group(1)
+
+    def rep(b, key, val):
+        pat = re.compile(rf"(?m)^{re.escape(key)}:.*$")
+        return pat.sub(f"{key}: {val}", b, count=1) if pat.search(b) else b + f"\n{key}: {val}"
+
+    block = rep(block, "status", status)
+    block = rep(block, "복습일", review)
+    return text[:m.start(1)] + block + text[m.end(1):]
+
+
+def update_note_frontmatter(path, status, review):
+    """노트 파일의 status/복습일을 갱신. 변경 시 True."""
+    try:
+        text = open(path, encoding="utf-8").read()
+    except OSError:
+        return False
+    new = set_frontmatter_fields(text, status, review)
+    if new == text:
+        return False
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(new)
+    return True
+
+
 def main(argv):
     sys.stdout.reconfigure(encoding="utf-8")  # cp949 콘솔에서 미리보기 이모지 크래시 차단
     dry = "--dry-run" in argv
@@ -249,6 +286,12 @@ def main(argv):
     with open(out, "w", encoding="utf-8") as f:
         f.write(note_md)
     print("wrote:", out)
+
+    # 자동 복습 진행(C): 뽑힌 노트의 status/복습일 갱신
+    new_status, new_review = next_review(note["status"], today)
+    note_path = os.path.join(ROOT, note["folder"], note["filename"])
+    if update_note_frontmatter(note_path, new_status, new_review):
+        print(f"note updated: status={new_status} review={new_review}")
 
     token, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
     if token and chat:

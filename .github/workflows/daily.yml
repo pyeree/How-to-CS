@@ -27,6 +27,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add "00_INDEX/🗓 오늘의 개념.md"
-          git diff --staged --quiet || git commit -m "데일리: 오늘의 개념 갱신 ($(date +%F))"
+          git add -A
+          git diff --staged --quiet || git commit -m "데일리: 오늘의 개념 갱신 + 복습 진행 ($(date +%F))"
           git push

@@ -154,6 +154,28 @@ def snapshot_manual():
                 saved[fn[:-3]] = blk
     return saved
 
+# 빌드 전: 기존 노트의 status/복습일 스냅샷 (stem -> (status, 복습일))
+def snapshot_status():
+    saved = {}
+    for _, dest, _ in FOLDER_MAP:
+        p = os.path.join(ROOT, dest)
+        if not os.path.isdir(p):
+            continue
+        for fn in os.listdir(p):
+            if not fn.endswith(".md"):
+                continue
+            text = open(os.path.join(p, fn), encoding="utf-8").read()
+            m = re.match(r"^---\n(.*?)\n---", text, re.S)
+            if not m:
+                continue
+            fm = {}
+            for line in m.group(1).splitlines():
+                mm = re.match(r"(\w+):\s*(.*)", line)
+                if mm:
+                    fm[mm.group(1)] = mm.group(2).strip()
+            saved[fn[:-3]] = (fm.get("status", "").strip(), fm.get("복습일", "").strip())
+    return saved
+
 # ---- 1단계: 임포트할 파일 수집 + 제목 레지스트리 구축 ----
 def collect():
     files = []  # (src_path, dest_folder, tag, title)
@@ -234,9 +256,10 @@ def convert_mdlinks(body, titles):
         return m.group(0)
     return re.sub(r"\[([^\]]*)\]\(([^)]+)\)", repl, body)
 
-def make_frontmatter(title, tag, aliases):
+def make_frontmatter(title, tag, aliases, status="안함", review=""):
     al = sorted(set(a for a in aliases if a != title), key=str.lower)
-    lines = ["---", f"tags: [{tag}]", "status: 안함", f"priority: {get_priority(title)}", "복습일: "]
+    lines = ["---", f"tags: [{tag}]", f"status: {status or '안함'}",
+             f"priority: {get_priority(title)}", f"복습일: {review}"]
     if al:
         lines.append("aliases: [" + ", ".join(f'"{a}"' for a in al) + "]")
     lines += ["출처: gyoogle", "---", ""]
@@ -247,6 +270,7 @@ def run():
     files, titles = collect()
     # 재생성 전에 수동 영역(30초 요약 등) 스냅샷 -> rmtree 후 재주입
     saved_manual = snapshot_manual()
+    saved_status = snapshot_status()
     # dest 폴더 초기화
     for _, dest, _ in FOLDER_MAP:
         p = os.path.join(ROOT, dest)
@@ -263,9 +287,11 @@ def run():
         body = convert_mdlinks(body, titles)
         body = autolink(body, title, titles)
         aliases = ALIASES.get(title, [])
-        out = make_frontmatter(title, tag, aliases) + body
         # 안전한 파일명 (윈도우 금지문자 제거)
         safe = re.sub(r'[<>:"/\\|?*]', "", title)
+        # status/복습일 보존(있으면) — 빌드해도 진도가 안 날아가게
+        st, rv = saved_status.get(safe, ("안함", ""))
+        out = make_frontmatter(title, tag, aliases, status=st or "안함", review=rv) + body
         # 수동 영역: 보존본 우선, 없으면 빈출(priority 1)에 빈 스캐폴드
         manual = saved_manual.get(safe)
         if manual is None and get_priority(title) == 1:

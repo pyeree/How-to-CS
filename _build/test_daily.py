@@ -314,5 +314,30 @@ class TestBodyExcerpt(unittest.TestCase):
         self.assertEqual(daily.body_first("---\ntags: [x]\n---\n## 제목만\n"), "")
 
 
+class TestAutoProgress(unittest.TestCase):
+    T = date(2026, 6, 22)
+
+    def test_new_note_completes_plus3(self):
+        self.assertEqual(daily.next_review("안함", self.T), ("완료", "2026-06-25"))
+
+    def test_completed_pushes_plus7(self):
+        self.assertEqual(daily.next_review("완료", self.T), ("완료", "2026-06-29"))
+
+    def test_bokseup_plus1(self):
+        self.assertEqual(daily.next_review("복습", self.T), ("완료", "2026-06-23"))
+
+    def test_set_frontmatter_replaces_fields_preserving_rest(self):
+        text = "---\ntags: [x]\nstatus: 안함\npriority: 1\n복습일: \n---\n## 제목\n본문"
+        out = daily.set_frontmatter_fields(text, "완료", "2026-06-25")
+        self.assertIn("status: 완료", out)
+        self.assertIn("복습일: 2026-06-25", out)
+        self.assertIn("priority: 1", out)      # 다른 필드 보존
+        self.assertIn("## 제목\n본문", out)      # 본문 보존
+        self.assertNotIn("status: 안함", out)
+
+    def test_set_frontmatter_no_frontmatter_returns_original(self):
+        self.assertEqual(daily.set_frontmatter_fields("그냥 본문", "완료", "2026-06-25"), "그냥 본문")
+
+
 if __name__ == "__main__":
     unittest.main()
