@@ -1,8 +1,8 @@
 ---
 tags: [운영체제]
-status: 안함
+status: 완료
 priority: 1
-복습일: 
+복습일: 2026-06-28
 aliases: ["Mutex", "Semaphore", "뮤텍스", "세마포어"]
 출처: gyoogle
 ---
