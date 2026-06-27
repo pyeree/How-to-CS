@@ -1,8 +1,8 @@
 ---
 tags: [컴퓨터구조]
-status: 안함
+status: 완료
 priority: 1
-복습일: 
+복습일: 2026-06-30
 출처: gyoogle
 ---
 ## 중앙처리장치(CPU) 작동 원리
