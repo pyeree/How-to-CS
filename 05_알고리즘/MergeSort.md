@@ -1,8 +1,8 @@
 ---
 tags: [알고리즘]
-status: 안함
+status: 완료
 priority: 1
-복습일: 
+복습일: 2026-07-04
 aliases: ["머지소트", "병합 정렬"]
 출처: gyoogle
 ---
