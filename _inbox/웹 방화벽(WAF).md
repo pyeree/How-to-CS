@@ -2,7 +2,7 @@
 tags: [네트워크]
 status: 완료
 priority: 1
-복습일: 2026-07-03
+복습일: 2026-07-10
 aliases: ["WAF", "Web Application Firewall", "웹 방화벽", "웹방화벽", "False Positive", "오탐"]
 출처: 직접 작성 (실경험 트러블슈팅 + [[SQL Injection]] 연계)
 ---
