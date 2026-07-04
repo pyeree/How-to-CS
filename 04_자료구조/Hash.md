@@ -1,8 +1,8 @@
 ---
 tags: [자료구조]
-status: 안함
+status: 완료
 priority: 1
-복습일: 
+복습일: 2026-07-07
 aliases: ["해시"]
 출처: gyoogle
 ---
