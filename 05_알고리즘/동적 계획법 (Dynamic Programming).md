@@ -2,7 +2,7 @@
 tags: [알고리즘]
 status: 완료
 priority: 1
-복습일: 2026-07-09
+복습일: 2026-07-16
 aliases: ["Dynamic Programming", "다이나믹 프로그래밍", "동적 계획법"]
 출처: gyoogle
 ---
