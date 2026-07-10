@@ -20,56 +20,102 @@ def _note(title, folder="01_운영체제", priority=2, status="안함", review=N
             "review_date": review, "summary": "", "related": "", "body_first": ""}
 
 
-class TestPick(unittest.TestCase):
-    TODAY = date(2026, 6, 22)
+def _day_with_slot(prefer_new):
+    """현재 NEW_CYCLE/NEW_PER_CYCLE 설정에서 원하는 슬롯(신규/복습)에 해당하는 날짜.
+    비율 상수를 바꿔도 테스트가 깨지지 않도록 날짜를 동적으로 찾는다."""
+    base = date(2026, 6, 22)
+    for i in range(daily.NEW_CYCLE):
+        d = date.fromordinal(base.toordinal() + i)
+        is_new = (d.toordinal() % daily.NEW_CYCLE) < daily.NEW_PER_CYCLE
+        if is_new == prefer_new:
+            return d
+    raise AssertionError("no matching slot day")
 
-    def test_review_due_wins_and_earliest_first(self):
+
+class TestPick(unittest.TestCase):
+    NEW_DAY = _day_with_slot(True)    # 신규 우선 슬롯
+    REV_DAY = _day_with_slot(False)   # 복습 우선 슬롯
+
+    def test_new_slot_prefers_new_over_due(self):
+        """핵심(starvation 방지): 신규 슬롯엔 복습이 밀려 있어도 신규를 먼저 소개."""
+        notes = [
+            _note("A", priority=1, status="안함"),
+            _note("C", status="완료", review="2026-06-10"),  # 밀린 복습이 있어도
+        ]
+        picked, reason = daily.pick_today(notes, self.NEW_DAY)
+        self.assertEqual(picked["title"], "A")
+        self.assertEqual(reason, "빈출신규")
+
+    def test_review_slot_wins_and_earliest_first(self):
+        """복습 슬롯: 밀린 복습 우선 + 가장 오래된 것부터."""
         notes = [
             _note("A", priority=1, status="안함"),
             _note("B", status="완료", review="2026-06-21"),
             _note("C", status="완료", review="2026-06-10"),  # 가장 오래된 복습
         ]
-        picked, reason = daily.pick_today(notes, self.TODAY)
+        picked, reason = daily.pick_today(notes, self.REV_DAY)
         self.assertEqual(picked["title"], "C")
+        self.assertEqual(reason, "복습")
+
+    def test_review_slot_falls_back_to_new_when_nothing_due(self):
+        """복습 슬롯이어도 밀린 복습이 없으면 신규로 폴백."""
+        notes = [_note("A", priority=1, status="안함"),
+                 _note("B", status="완료", review="2026-12-31")]  # 미래 = 미도래
+        picked, reason = daily.pick_today(notes, self.REV_DAY)
+        self.assertEqual(picked["title"], "A")
+        self.assertEqual(reason, "빈출신규")
+
+    def test_all_studied_always_reviews(self):
+        """안함이 다 소진되면 신규 슬롯 날에도 복습 우선."""
+        notes = [_note("A", status="완료", review="2026-06-10"),
+                 _note("B", status="완료", review="2026-12-31")]
+        picked, reason = daily.pick_today(notes, self.NEW_DAY)
+        self.assertEqual(picked["title"], "A")
         self.assertEqual(reason, "복습")
 
     def test_priority1_new_when_no_review(self):
         notes = [_note("A", priority=2, status="안함"),
                  _note("B", priority=1, status="안함")]
-        picked, reason = daily.pick_today(notes, self.TODAY)
+        picked, reason = daily.pick_today(notes, self.NEW_DAY)
         self.assertEqual(picked["title"], "B")
         self.assertEqual(reason, "빈출신규")
 
     def test_any_new_when_no_priority1(self):
         notes = [_note("A", priority=2, status="안함"),
                  _note("B", priority=3, status="완료")]
-        picked, reason = daily.pick_today(notes, self.TODAY)
+        picked, reason = daily.pick_today(notes, self.NEW_DAY)
         self.assertEqual(picked["title"], "A")
         self.assertEqual(reason, "신규")
 
     def test_completed_long_review_fallback(self):
         notes = [_note("A", status="완료"), _note("B", status="복습")]
-        picked, reason = daily.pick_today(notes, self.TODAY)
+        picked, reason = daily.pick_today(notes, self.NEW_DAY)
         self.assertEqual(picked["title"], "A")
         self.assertEqual(reason, "장기복습")
 
     def test_none_when_empty(self):
-        picked, reason = daily.pick_today([], self.TODAY)
+        picked, reason = daily.pick_today([], self.NEW_DAY)
         self.assertIsNone(picked)
         self.assertIsNone(reason)
 
     def test_deterministic_same_date(self):
         notes = [_note(c, priority=1, status="안함") for c in ["A", "B", "C", "D", "E"]]
-        p1, _ = daily.pick_today(notes, self.TODAY)
-        p2, _ = daily.pick_today(notes, self.TODAY)
+        p1, _ = daily.pick_today(notes, self.NEW_DAY)
+        p2, _ = daily.pick_today(notes, self.NEW_DAY)
         self.assertEqual(p1["title"], p2["title"])  # 같은 날 = 같은 결과
 
-    def test_future_review_not_due(self):
-        notes = [_note("A", priority=1, status="안함"),
-                 _note("B", status="완료", review="2026-12-31")]  # 미래 = 미도래
-        picked, reason = daily.pick_today(notes, self.TODAY)
-        self.assertEqual(reason, "빈출신규")
-        self.assertEqual(picked["title"], "A")
+    def test_no_starvation_full_coverage(self):
+        """교차 규칙이 전 범위를 결국 모두 소개하는지(굶는 노트 없음) 회귀 검증."""
+        notes = [_note(f"N{i:02d}", priority=1, status="안함") for i in range(20)]
+        seen, day = set(), date(2026, 6, 22)
+        from datetime import timedelta
+        for i in range(120):
+            t = day + timedelta(days=i)
+            n, _ = daily.pick_today(notes, t)
+            seen.add(n["title"])
+            ns, nr = daily.next_review(n["status"], t)
+            n["status"], n["review_date"] = ns, nr
+        self.assertEqual(len(seen), 20)  # 20개 전부 최소 1회 소개
 
 
 class TestMessage(unittest.TestCase):

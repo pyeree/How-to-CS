@@ -88,23 +88,57 @@ def _pick_one(cands, today):
     return cands[_seed(today) % len(cands)]
 
 
-def pick_today(notes, today):
-    """복습우선 선정. 반환 (note|None, reason|None)."""
+# 신규:복습 교차 비율 — NEW_CYCLE일 주기 중 앞 NEW_PER_CYCLE일은 신규 우선.
+# (안함 노트가 남아있는 동안에만 적용. 소진되면 항상 복습 우선.)
+# 3:1 = 초반 완독 우선(4일 중 3일 신규). 균형형은 3/2.
+NEW_CYCLE = 4
+NEW_PER_CYCLE = 3
+
+
+def _pick_due(notes, today):
+    """복습일이 지난(가장 오래 밀린) 완료 노트. 없으면 (None, None)."""
     iso = today.isoformat()
     due = [n for n in notes if n["review_date"] and n["review_date"] <= iso and n["status"] != "안함"]
-    if due:
-        earliest = min(n["review_date"] for n in due)
-        tied = [n for n in due if n["review_date"] == earliest]
-        return _pick_one(tied, today), "복습"
+    if not due:
+        return None, None
+    earliest = min(n["review_date"] for n in due)
+    tied = [n for n in due if n["review_date"] == earliest]
+    return _pick_one(tied, today), "복습"
+
+
+def _pick_new(notes, today):
+    """빈출 우선 신규 → 일반 신규. 없으면 (None, None)."""
     g2 = [n for n in notes if n["priority"] == 1 and n["status"] == "안함"]
     if g2:
         return _pick_one(g2, today), "빈출신규"
     g3 = [n for n in notes if n["status"] == "안함"]
     if g3:
         return _pick_one(g3, today), "신규"
+    return None, None
+
+
+def _pick_longterm(notes, today):
+    """복습일 미도래여도 완료/복습 노트 중 택1(최후 폴백). 없으면 (None, None)."""
     g4 = [n for n in notes if n["status"] in ("완료", "복습")]
     if g4:
         return _pick_one(g4, today), "장기복습"
+    return None, None
+
+
+def pick_today(notes, today):
+    """신규:복습 교차 선정. 반환 (note|None, reason|None).
+
+    안함 노트가 남아있는 동안은 NEW_CYCLE일 중 NEW_PER_CYCLE일을 신규에 배정해
+    전 범위가 꾸준히 소개되도록 한다(복습이 신규를 굶기는 starvation 방지).
+    해당 슬롯에 뽑을 게 없으면 다른 종류로 자동 폴백. 안함 소진 후엔 항상 복습 우선."""
+    has_new = any(n["status"] == "안함" for n in notes)
+    prefer_new = has_new and (today.toordinal() % NEW_CYCLE) < NEW_PER_CYCLE
+    order = ([_pick_new, _pick_due, _pick_longterm] if prefer_new
+             else [_pick_due, _pick_new, _pick_longterm])
+    for fn in order:
+        note, reason = fn(notes, today)
+        if note:
+            return note, reason
     return None, None
 
 
