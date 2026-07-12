@@ -1,8 +1,8 @@
 ---
 tags: [데이터베이스]
-status: 안함
+status: 완료
 priority: 1
-복습일: 
+복습일: 2026-07-15
 aliases: ["트랜잭션"]
 출처: gyoogle
 ---
