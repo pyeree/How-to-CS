@@ -1,8 +1,8 @@
 ---
 tags: [운영체제]
-status: 안함
+status: 완료
 priority: 1
-복습일: 
+복습일: 2026-07-16
 aliases: ["교착상태", "데드락"]
 출처: gyoogle
 ---
