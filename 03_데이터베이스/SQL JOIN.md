@@ -1,8 +1,8 @@
 ---
 tags: [데이터베이스]
-status: 안함
+status: 완료
 priority: 1
-복습일: 
+복습일: 2026-07-20
 aliases: ["조인"]
 출처: gyoogle
 ---
