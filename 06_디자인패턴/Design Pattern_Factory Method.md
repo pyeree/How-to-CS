@@ -1,8 +1,8 @@
 ---
 tags: [디자인패턴]
-status: 안함
+status: 완료
 priority: 1
-복습일: 
+복습일: 2026-07-23
 aliases: ["팩토리 메서드", "팩토리 패턴"]
 출처: gyoogle
 ---
