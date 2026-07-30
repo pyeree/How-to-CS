@@ -2,7 +2,7 @@
 tags: [자료구조]
 status: 완료
 priority: 1
-복습일: 2026-07-14
+복습일: 2026-08-06
 출처: gyoogle
 ---
 # Tree
