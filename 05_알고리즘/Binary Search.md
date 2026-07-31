@@ -1,8 +1,8 @@
 ---
 tags: [알고리즘]
-status: 안함
+status: 완료
 priority: 1
-복습일: 
+복습일: 2026-08-03
 aliases: ["이분 탐색", "이진 탐색"]
 출처: gyoogle
 ---
