@@ -1,8 +1,8 @@
 ---
 tags: [운영체제]
-status: 안함
+status: 완료
 priority: 1
-복습일: 
+복습일: 2026-08-08
 aliases: ["Process", "Thread", "스레드", "쓰레드", "프로세스"]
 출처: gyoogle
 ---
