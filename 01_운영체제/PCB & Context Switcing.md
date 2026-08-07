@@ -1,8 +1,8 @@
 ---
 tags: [운영체제]
-status: 완료
+status: 안함
 priority: 1
-복습일: 2026-07-28
+복습일: 
 aliases: ["Context Switching", "PCB", "컨텍스트 스위칭"]
 출처: gyoogle
 ---

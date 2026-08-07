@@ -292,12 +292,10 @@ def run():
         # status/복습일 보존(있으면) — 빌드해도 진도가 안 날아가게
         st, rv = saved_status.get(safe, ("안함", ""))
         out = make_frontmatter(title, tag, aliases, status=st or "안함", review=rv) + body
-        # 수동 영역: 보존본 우선, 없으면 빈출(priority 1)에 빈 스캐폴드
-        manual = saved_manual.get(safe)
-        if manual is None and get_priority(title) == 1:
-            manual = scaffold_manual()
-        if manual:
-            out = out.rstrip() + "\n\n" + manual + "\n"
+        # 수동 영역: 보존본 우선, 없으면 빈 스캐폴드.
+        # 요약 칸이 곧 완료 판정 근거(daily.py reconcile_statuses)라 전 노트에 넣는다.
+        manual = saved_manual.get(safe) or scaffold_manual()
+        out = out.rstrip() + "\n\n" + manual + "\n"
         with open(os.path.join(ROOT, dest, safe + ".md"), "w", encoding="utf-8") as f:
             f.write(out)
         stats[dest] = stats.get(dest, 0) + 1

@@ -127,3 +127,9 @@ Aglie에 속하는 방법론이 Scrum, XP이다.
 - Iteration Review : 고객이 함께 있는 상황에서 Iteration의 결과물로 나온 Shippable Product에 대한 피드백, 평가를 받는다.
 
 결론 5 : Agile 접근법의 성공을 위해서는 세부적인 Technique을 전체 process에서 실행해야한다.
+
+<!-- 🔒 MANUAL:START — 빌드해도 안 지워짐. 30초 요약 등 직접 작성 -->
+## 🎤 면접 30초 요약
+> 본문을 30초 분량으로 압축. 막히면 [[🤖 Claude 학습 루프]]의 '채우기' 프롬프트 사용.
+
+<!-- 🔒 MANUAL:END -->

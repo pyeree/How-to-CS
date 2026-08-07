@@ -1,8 +1,8 @@
 ---
 tags: [디자인패턴]
-status: 완료
+status: 안함
 priority: 1
-복습일: 2026-07-19
+복습일: 
 aliases: ["Observer", "옵저버 패턴"]
 출처: gyoogle
 ---

@@ -1,8 +1,8 @@
 ---
 tags: [데이터베이스]
-status: 완료
+status: 안함
 priority: 1
-복습일: 2026-08-04
+복습일: 
 출처: gyoogle
 ---
 ### [DB] Key

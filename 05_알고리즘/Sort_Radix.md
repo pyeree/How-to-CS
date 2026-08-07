@@ -104,3 +104,9 @@ MSD는 가장 큰 자리수부터 Counting sort 하는 것을 의미하고, LSD�
 * LSD는 알고리즘이 일관됨 (Branch Free algorithm)
   그러나 MSD는 일관되지 못함. --> 따라서 Radix sort는 주로 LSD를 언급함.
 * LSD는 자릿수가 정해진 경우 좀 더 빠를 수 있음.
+
+<!-- 🔒 MANUAL:START — 빌드해도 안 지워짐. 30초 요약 등 직접 작성 -->
+## 🎤 면접 30초 요약
+> 본문을 30초 분량으로 압축. 막히면 [[🤖 Claude 학습 루프]]의 '채우기' 프롬프트 사용.
+
+<!-- 🔒 MANUAL:END -->

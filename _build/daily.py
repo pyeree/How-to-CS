@@ -256,10 +256,16 @@ def send_telegram(token, chat_id, text, markdown=True):
         return False
 
 
+# 30초 요약을 처음 채웠을 때 잡아주는 첫 복습 간격(일).
+FIRST_REVIEW_DAYS = 3
+
+
 def next_review(status, today):
-    """뽑힌 노트의 자동 복습 진행 → (새 status, 새 복습일 iso).
-    안함/공부중→완료(+3일), 완료→완료(+7일), 복습→완료(+1일)."""
-    days = 1 if status == "복습" else 7 if status == "완료" else 3
+    """이미 학습한 노트의 다음 복습일 → (새 status, 새 복습일 iso).
+    완료→완료(+7일), 복습→완료(+1일).
+    '안함'은 여기 오지 않는다 — 완료 승격은 오직 30초 요약을 채웠을 때만
+    (reconcile_statuses). cron은 학습하지 않은 노트를 완료로 찍지 않는다."""
+    days = 1 if status == "복습" else 7
     return "완료", (today + timedelta(days=days)).isoformat()
 
 
@@ -293,6 +299,24 @@ def update_note_frontmatter(path, status, review):
     return True
 
 
+def reconcile_statuses(notes, today, root, write=True):
+    """30초 요약(🔒 MANUAL 블록)이 채워졌는데 아직 미학습인 노트를 '완료'로 승격.
+
+    진도의 유일한 판정 근거는 사람이 쓴 요약이다. cron이 노트를 뽑았다는 사실만으로는
+    완료가 되지 않으므로, 대시보드 숫자가 실제 학습량과 어긋나지 않는다.
+    notes의 status/복습일도 제자리에서 갱신해 같은 실행의 선정에 바로 반영된다."""
+    review = (today + timedelta(days=FIRST_REVIEW_DAYS)).isoformat()
+    promoted = []
+    for n in notes:
+        if not n["summary"] or n["status"] not in ("", "안함", "공부중"):
+            continue
+        path = os.path.join(root, n["folder"], n["filename"])
+        if not write or update_note_frontmatter(path, "완료", review):
+            n["status"], n["review_date"] = "완료", review
+            promoted.append(n["title"])
+    return promoted
+
+
 def main(argv):
     sys.stdout.reconfigure(encoding="utf-8")  # cp949 콘솔에서 미리보기 이모지 크래시 차단
     dry = "--dry-run" in argv
@@ -301,6 +325,11 @@ def main(argv):
     repo = os.environ.get("GITHUB_REPOSITORY", REPO_DEFAULT)
 
     notes = load_notes(ROOT)
+    # 선정 전에 승격 — 어제 채운 요약이 오늘 바로 진도에 반영되게.
+    promoted = reconcile_statuses(notes, today, ROOT, write=not dry)
+    if promoted:
+        print(f"promoted (요약 채움 -> 완료) {len(promoted)}개:", ", ".join(promoted))
+
     note, reason = pick_today(notes, today)
     if note is None:
         print("no candidate today")
@@ -321,11 +350,15 @@ def main(argv):
         f.write(note_md)
     print("wrote:", out)
 
-    # 자동 복습 진행(C): 뽑힌 노트의 status/복습일 갱신
-    new_status, new_review = next_review(note["status"], today)
-    note_path = os.path.join(ROOT, note["folder"], note["filename"])
-    if update_note_frontmatter(note_path, new_status, new_review):
-        print(f"note updated: status={new_status} review={new_review}")
+    # 복습 진행: 이미 학습한(완료/복습) 노트만 다음 복습일로 민다.
+    # 미학습 노트는 여기서 건드리지 않는다 — 30초 요약을 채워야 완료가 된다.
+    if note["status"] in ("완료", "복습"):
+        new_status, new_review = next_review(note["status"], today)
+        note_path = os.path.join(ROOT, note["folder"], note["filename"])
+        if update_note_frontmatter(note_path, new_status, new_review):
+            print(f"note updated: status={new_status} review={new_review}")
+    else:
+        print("note untouched (미학습) - 30초 요약을 채우면 완료로 승격됨")
 
     token, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
     if token and chat:

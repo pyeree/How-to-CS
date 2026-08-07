@@ -1,8 +1,8 @@
 ---
 tags: [데이터베이스]
-status: 완료
+status: 안함
 priority: 1
-복습일: 2026-07-29
+복습일: 
 aliases: ["인덱스"]
 출처: gyoogle
 ---

@@ -1,8 +1,8 @@
 ---
 tags: [소프트웨어공학]
-status: 완료
+status: 안함
 priority: 1
-복습일: 2026-08-01
+복습일: 
 aliases: ["OOP", "객체 지향", "객체지향"]
 출처: gyoogle
 ---

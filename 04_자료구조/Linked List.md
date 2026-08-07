@@ -1,8 +1,8 @@
 ---
 tags: [자료구조]
-status: 완료
+status: 안함
 priority: 1
-복습일: 2026-07-22
+복습일: 
 aliases: ["링크드 리스트", "연결 리스트"]
 출처: gyoogle
 ---

@@ -1,8 +1,8 @@
 ---
 tags: [알고리즘]
-status: 완료
+status: 안함
 priority: 1
-복습일: 2026-07-26
+복습일: 
 aliases: ["BFS", "DFS"]
 출처: gyoogle
 ---

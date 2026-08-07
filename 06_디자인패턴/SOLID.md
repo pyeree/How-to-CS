@@ -1,8 +1,8 @@
 ---
 tags: [디자인패턴]
-status: 완료
+status: 안함
 priority: 1
-복습일: 2026-07-31
+복습일: 
 출처: gyoogle
 ---
 # An overview of design pattern - SOLID, GRASP

@@ -18,12 +18,13 @@ CS 면접 지식을 **빌드 가능한 옵시디언 그래프 vault**로 운영�
 ## 빌드
 - **항상 `python _build/build.py`** (convert→build_index 순서 보장). 개별 실행 시 순서는 `convert.py` → `build_index.py`.
 - Windows 콘솔(cp949)은 이모지 `print`에서 `UnicodeEncodeError`를 낸다 — 스크립트의 stdout 출력에는 이모지를 쓰지 마라(파일 본문 안의 이모지는 무방).
-- **데일리**: `python _build/daily.py`는 `build.py`와 독립(`_source` 불필요). 기존 노트를 읽어 하루 하나 선정 → `00_INDEX/🗓 오늘의 개념.md`(생성물) 갱신 + 텔레그램 발송 + **뽑힌 노트의 status/복습일 자동 진행**(안함→완료+3일, 완료→+7일, 복습→+1일). 생성물·선정·문구·복습 로직 다 `_build/daily.py`에 있다. `--dry-run`은 쓰기·발송 안 함. 시크릿은 GitHub Secrets에만.
+- **데일리**: `python _build/daily.py`는 `build.py`와 독립(`_source` 불필요). 기존 노트를 읽어 하루 하나 선정 → `00_INDEX/🗓 오늘의 개념.md`(생성물) 갱신 + 텔레그램 발송. 생성물·선정·문구·복습 로직 다 `_build/daily.py`에 있다. `--dry-run`은 쓰기·발송 안 함. 시크릿은 GitHub Secrets에만.
+- **완료 판정은 사람 손으로만.** 노트를 뽑았다는 사실은 진도가 아니다. `reconcile_statuses()`가 매 실행마다 **30초 요약(🔒 MANUAL 블록)이 채워졌는데 `안함`인 노트**를 `완료`+`복습일`(+3일)로 승격한다. 미학습 노트는 뽑혀도 frontmatter를 건드리지 않는다. 이미 학습한(완료/복습) 노트만 뽑힐 때 `복습일`이 밀린다(완료→+7일, 복습→+1일). 이 규칙 덕에 대시보드 숫자가 실제 학습량과 일치한다 — 되돌리지 마라.
 - **진도 보존**: `convert.py`가 빌드 전 각 노트의 `status`/`복습일`을 스냅샷→재주입해 보존한다(MANUAL 블록과 동일 방식). 그래서 빌드해도 진도가 초기화되지 않는다.
 - 의존성 없음: 파이썬 표준 라이브러리 + `git`만.
 
 ## 메커니즘 메모
-- 빈출 우선순위: `convert.py`의 `PRIORITY_1/PRIORITY_3` 집합 → frontmatter `priority`. priority 1 노트엔 30초 요약 스캐폴드가 자동 삽입된다.
+- 빈출 우선순위: `convert.py`의 `PRIORITY_1/PRIORITY_3` 집합 → frontmatter `priority`. 30초 요약 스캐폴드는 **전 노트**에 삽입된다(요약 칸이 곧 완료 판정 근거라 priority 무관).
 - 위키링크 자동 연결: `convert.py`의 `ALIASES` + 제목 매칭(`autolink`). 코드/기존 링크는 마스킹 후 치환.
 - 대시보드/로드맵 집계 범위 `FROM` = 8개 카테고리 + `_inbox`. MOC 대상 `CATS`에는 `_inbox`를 넣지 않는다(그래야 `rmtree` 대상에서 빠진다).
 - `.obsidian` 설정은 **없을 때만** 생성(비파괴) — 사용자가 설치한 플러그인 보존.

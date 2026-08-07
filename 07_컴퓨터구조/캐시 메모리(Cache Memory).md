@@ -1,8 +1,8 @@
 ---
 tags: [컴퓨터구조]
-status: 완료
+status: 안함
 priority: 1
-복습일: 2026-07-24
+복습일: 
 aliases: ["캐시 메모리"]
 출처: gyoogle
 ---
