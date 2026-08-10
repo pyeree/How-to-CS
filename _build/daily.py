@@ -6,7 +6,17 @@ How-to-CS : 오늘의 개념 데일리
 의존성: 표준 라이브러리만.
 """
 import os, re, sys, hashlib, urllib.request, urllib.parse, urllib.error
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
+
+# 이 vault의 "오늘"은 언제나 한국 날짜다.
+# GitHub Actions 러너는 UTC라 date.today()를 쓰면 cron(23:00 UTC = 08:00 KST)이
+# 돌 때 한국 날짜보다 하루 뒤처진 날을 읽는다 — 노트 라벨이 어제로 찍히고
+# 복습도 하루씩 늦게 소환된다. 한국은 DST가 없어 고정 오프셋으로 충분.
+KST = timezone(timedelta(hours=9))
+
+
+def today_kst():
+    return datetime.now(KST).date()
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CATS = [
@@ -321,7 +331,7 @@ def main(argv):
     sys.stdout.reconfigure(encoding="utf-8")  # cp949 콘솔에서 미리보기 이모지 크래시 차단
     dry = "--dry-run" in argv
     dpart = [a for a in argv if a.startswith("--date=")]
-    today = date.fromisoformat(dpart[0].split("=", 1)[1]) if dpart else date.today()
+    today = date.fromisoformat(dpart[0].split("=", 1)[1]) if dpart else today_kst()
     repo = os.environ.get("GITHUB_REPOSITORY", REPO_DEFAULT)
 
     notes = load_notes(ROOT)
