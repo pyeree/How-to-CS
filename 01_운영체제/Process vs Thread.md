@@ -20,7 +20,7 @@ aliases: ["Process", "Thread", "스레드", "쓰레드", "프로세스"]
 
 <br>
 
-![img](https://camo.githubusercontent.com/3dc4ad61f03160c310a855a4bd68a9f2a2c9a4c7/68747470733a2f2f74312e6461756d63646e2e6e65742f6366696c652f746973746f72792f393938383931343635433637433330363036)
+<img width="2991" height="1588" alt="image" src="https://github.com/user-attachments/assets/e6b1a58c-a439-4edf-aff8-e4f6c4d2895f" />
 
 프로세스는 각각 별도의 주소 공간을 할당받는다. (독립적)
 
