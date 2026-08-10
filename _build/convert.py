@@ -234,7 +234,11 @@ def autolink(body, self_title, titles):
         if "\x00" in m.group(0):
             continue
         repl = f"[[{canon}]]" if alias == canon else f"[[{canon}|{alias}]]"
-        body = body[:m.start()] + repl + body[m.end():]
+        # 삽입한 링크도 즉시 마스킹한다. 안 하면 뒤 별칭이 방금 넣은 canonical
+        # 제목 안쪽을 또 물어 중첩 링크가 된다
+        # (캐시 메모리 -> [[캐시 메모리(Cache Memory)|…]] -> Cache [[Memory]] 안에 재삽입).
+        masks.append(repl)
+        body = body[:m.start()] + f"\x00{len(masks)-1}\x00" + body[m.end():]
         linked.add(canon)
 
     # 마스크 복원
