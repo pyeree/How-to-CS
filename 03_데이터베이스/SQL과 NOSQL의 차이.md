@@ -3,7 +3,7 @@ tags: [데이터베이스]
 status: 안함
 priority: 2
 복습일: 
-aliases: ["NOSQL", "NoSQL"]
+aliases: ["NoSQL", "NOSQL"]
 출처: gyoogle
 ---
 ## SQL과 NOSQL의 차이
