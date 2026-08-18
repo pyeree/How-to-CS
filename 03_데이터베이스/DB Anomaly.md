@@ -2,7 +2,7 @@
 tags: [데이터베이스]
 status: 완료
 priority: 1
-복습일: 2026-08-13
+복습일: 2026-08-26
 출처: gyoogle
 ---
 #### [DB] Anomaly
