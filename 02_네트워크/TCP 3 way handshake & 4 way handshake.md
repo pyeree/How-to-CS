@@ -2,7 +2,7 @@
 tags: [네트워크]
 status: 완료
 priority: 1
-복습일: 2026-08-14
+복습일: 2026-08-30
 aliases: ["3 way handshake", "3-way handshake", "핸드셰이크"]
 출처: gyoogle
 ---
