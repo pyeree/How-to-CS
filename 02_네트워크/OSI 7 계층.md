@@ -2,7 +2,7 @@
 tags: [네트워크]
 status: 완료
 priority: 1
-복습일: 2026-08-18
+복습일: 2026-09-11
 aliases: ["OSI", "OSI 7계층"]
 출처: gyoogle
 ---
