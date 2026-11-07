@@ -2,7 +2,7 @@
 tags: [운영체제]
 status: 완료
 priority: 1
-복습일: 2026-10-17
+복습일: 2026-11-14
 aliases: ["Process", "Thread", "스레드", "쓰레드", "프로세스"]
 출처: gyoogle
 ---
